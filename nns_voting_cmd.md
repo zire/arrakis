@@ -17,7 +17,7 @@ As a [high-frequence user of NNS](https://twitter.com/herbertyang/status/1512623
 
 So I need a method to review pending NNS proposals and cast votes on them fast and without interruption. The entire set of interface APIs for NNS governance is already categorically defined in [governance.did](https://raw.githubusercontent.com/dfinity/ic/master/rs/nns/governance/canister/governance.did). Technically, somebody could develop another NNS front-end app completely based off this one single file (which would be a worthy hackathon bounty). 
 
-Two command-line tools are needed. [*quill*](https://github.com/dfinity/quill) is a minimalistic tool created by DFINITY to manage neurons through air-gaged cold wallets. [*dfx*](https://github.com/dfinity/sdk) is the official SDK developed by DFINITY for building apps on the Internet Computer. Theoretically, the entire workflow can be done in *dfx* and probably should be. For now I'll still go with the hybrid approach as *quill* makes a few steps slightly easier.
+Two command-line tools are needed. [*quill*](https://github.com/dfinity/quill) is a minimalistic tool created by DFINITY to manage neurons through air-gagged cold wallets. [*dfx*](https://github.com/dfinity/sdk) is the official SDK developed by DFINITY for building apps on the Internet Computer. Theoretically, the entire workflow can be done in *dfx* and probably should be. For now I'll still go with the hybrid approach as *quill* makes a few steps slightly easier.
 
 I was very buoyed by [Mix Labs](https://twitter.com/MixLabs_) developer [Liquan](https://twitter.com/liquan_eth)'s [earlier experiment on this topic in July 2021](https://forum.dfinity.org/t/how-to-use-dfx-to-interact-with-nns-canisters-instead-of-nns-app/6013) and drew many inspirations from his scripts. My DFINITY colleagues [Paul](https://twitter.com/paulliuicp) provided constant guidance along the way and [David](https://twitter.com/daviddalbusco) provided the last piece to complete the puzzle.
 
@@ -229,7 +229,7 @@ To create a neuron that is eligible for voting on NNS, the neuron needs to have 
 
 So we will need to first top up the ICP balance of this account `1734`. This is a one-time action. I just did that with one of my [Plug](https://twitter.com/plug_wallet) wallets and added `1` ICP into account `1734`. It could have been done in *dfx* too, for command-line maxis. 
 
-Commands in *quill* cannot be executed without running `quill send`. We will need to pipe the result of `quill neuron-stake` into a JSON message that will be read by `quill send` and sent over to the IC ledger. Note that, this workflow will break the air-gag and the cold wallet will no longer stay cold. I can jump through a few additional hoops to maintain the air-gag but that's not the concern for this guide.
+Commands in *quill* cannot be executed without running `quill send` first. We will need to pipe the result of `quill neuron-stake` into a JSON message that will be read by `quill send` and sent over to the IC ledger. Note that, this workflow will break the air-gag and the cold wallet will no longer stay cold. I can jump through a few additional hoops to maintain the air-gag but that's not the concern for this guide.
 
 Let's release the kraken with subcommand `neuron-stake`, followed by `send --yes -`.
 
@@ -247,10 +247,9 @@ and it returns
             - NeuronId = record { id = 5_006_161_079_443_216_280 : nat64 }
         - };
     - },
-****
 ```
 
-A new neuron with ID `5_006_161_079_443_216_280` or [5006161079443216280](https://dashboard.internetcomputer.org/neuron/5006161079443216280) was just created. 
+A new neuron with ID `5_006_161_079_443_216_280` or [5006161079443216280](https://dashboard.internetcomputer.org/neuron/5006161079443216280) was just created. Take down this neuron ID. Don't lose it.
 
 Take a closer look at this neuron with `get-neuron-info` subcommand
 
@@ -341,13 +340,19 @@ From the same output message from `get-neuron-info`, it can be verified that the
 dissolve_delay_seconds = 252_460_800 : nat64;
 ```
 
+Note that this neuron can only vote on NNS proposals submitted AFTER its creation, not before.
+
 ### Step 3 - review NNS proposals and cast votes
 
-Running *dfx* requires several files such as `dfx.json` and `canister_ids.json` for a minimum deployment folder. [Paul](https://github.com/ninegua/) created a simnple package. Download it from [here](https://gist.github.com/ninegua/6fa1863837556766e0bcfd8b3aeb4c30) . 
+Running *dfx* requires several files such as `dfx.json` and `canister_ids.json` for a minimum deployment folder. [Paul](https://github.com/ninegua/) created a simple package. Download it from [here](https://gist.github.com/ninegua/6fa1863837556766e0bcfd8b3aeb4c30). 
 
-Unzip the file, rename the folder (say, `nns`), move that to `/Applications` folder.
+Unzip the file, move it into an empty folder (say, `nns-make`), move the folder to `/Applications` folder. Enter into the folder and run `make` in it.
 
-It has the following files
+```
+cd nns-make
+make
+```
+A few files will be created and downloaded. The folder `nns-make` now looks like
 
 ```
 .dfx
@@ -395,7 +400,7 @@ It shall return
 )
 ```
 
-[governance.did](https://github.com/dfinity/ic/raw/master/rs/nns/governance/canister/governance.did) defines the entire API interface for NNS. The last section is probably the most important one, especially with `manage_neuron` command.
+In this folder, check out the file [governance.did](https://github.com/dfinity/ic/raw/master/rs/nns/governance/canister/governance.did) that defines the entire API interface for NNS. The last section is probably the most important one, especially with `manage_neuron` command.
 
 ```
   claim_gtc_neurons : (principal, vec NeuronId) -> (Result);
@@ -526,7 +531,7 @@ Success!
 
 ### Step 4 - set follow topics and followees in NNS
 
-Step 3 can be repeated as needed, with a different *Proposal ID* each time.
+Step 3 can be repeated as frequently as needed, with a different *Proposal ID* each time.
 
 We also need to set up follow topic and followees, so that we can focus on the most consequential proposals rather than routine updates. For now I'm following Neuron 27 (DFINITY) and Neuron 28 (Internet Computer Association) for all exchange related proposals, which is `topic 2` according to the [reference file on NNS governance API](https://github.com/dfinity/ic/blob/master/rs/nns/governance/proto/ic_nns_governance/pb/v1/governance.proto). The NNS way is to pick a topic first, then neuron IDs. 
 
@@ -544,7 +549,7 @@ We also need to set up follow topic and followees, so that we can focus on the m
   NodeProviderRewards = 10,
 ```
 
-This step can be accomplished in *dfx* or *quill*. Using *quill* has easier syntax. 
+This step can be accomplished in *dfx* or *quill*. *quill* has easier syntax (thought takes a bit of guestwork).
 
 For every topic, if only one neuron will be followed
 
@@ -614,7 +619,7 @@ The output message contains this, verifying that the follow action has been effe
       };
 ```
 
-This completes the entire loop. No more auto logoout every ten minutes. No more waiting for webpage loading. It's entirely run on command line. You can control the entire workflow at your own pace with probably more info than you actually need.
+This completes the entire loop. No more auto logout every ten minutes. No more waiting for webpage loading. It's entirely run on command line. You can control the entire workflow at your own pace with probably more info than you actually need.
 
 ## Next
 
