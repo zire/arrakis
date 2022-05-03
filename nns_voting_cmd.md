@@ -341,11 +341,290 @@ From the same output message from `get-neuron-info`, it can be verified that the
 dissolve_delay_seconds = 252_460_800 : nat64;
 ```
 
-### Step 2 - review NNS proposals and cast votes
+### Step 3 - review NNS proposals and cast votes
 
-### Step 3 - set follow topics and followees in NNS
+Running *dfx* requires several files such as `dfx.json` and `canister_ids.json` for a minimum deployment folder. [Paul](https://github.com/ninegua/) created a simnple package. Download it from [here](https://gist.github.com/ninegua/6fa1863837556766e0bcfd8b3aeb4c30) . 
+
+Unzip the file, rename the folder (say, `nns`), move that to `/Applications` folder.
+
+It has the following files
+
+```
+.dfx
+Makefile
+canister_ids.json
+dfx.json
+governance.did
+```
+
+Test run to see if you can successfully query IC ledger
+
+```
+$ dfx canister --network=ic call nns list_known_neurons
+```
+
+It shall return
+
+```
+(
+  record {
+    known_neurons = vec {
+      record {
+        id = opt record { id = 4_966_884_161_088_437_903 : nat64 };
+        known_neuron_data = opt record {
+          name = "ICP Maximalist Network";
+          description = opt "The ICPMN neuron will be representative of the end users, investors, developers, project leaders, Dfinity and ICA members, and other IC ecosystem contributors who participate in our community. A primary objective will be to ensure that our neuron can be trusted to always vote on all proposals. The neuron will be configured to follow our elected voting members on all Governance proposals and to follow Dfinity Foundation (DF) and/or Internet Computer Association (ICA) on non-Governance proposals.  \n\nOwnership and configuration of this community neuron as well as voting member expectations are described in the policy document published at https://www.ic.community/followee-neuron-for-icp-maximalist-network/ .  \n\nYou can join the active ICP Maximalist Network community on Telegram at https://t.me/icpmaximalistnetwork ";
+        };
+      };
+      record {
+        id = opt record { id = 14_231_996_777_861_930_328 : nat64 };
+        known_neuron_data = opt record {
+          name = "ICDevs.org";
+          description = opt "ICDevs.org is a non-profit that seeks to provide the general public with community organization, educational resources, funding, and scientific discovery for the use and development of the Internet Computer and related technologies. We aim to weigh the interests of developers in the Internet Computer ecosystem. Details of how we vote and how you can participate are found at https://icdevs.org/nns.html";
+        };
+      };
+      record {
+        id = opt record { id = 5_967_494_994_762_486_275 : nat64 };
+        known_neuron_data = opt record {
+          name = "cycledao.xyz";
+          description = opt "cycle_dao is a group of Internet Computer ecosystem members who deliberate on proposals and vote via a DAO that controls the cycle_dao neuron. We aim to weigh the interests of all parties in the Internet Computer ecosystem and support the future stability and longevity of the Internet Computer. ";
+        };
+      };
+    };
+  },
+)
+```
+
+[governance.did](https://github.com/dfinity/ic/raw/master/rs/nns/governance/canister/governance.did) defines the entire API interface for NNS. The last section is probably the most important one, especially with `manage_neuron` command.
+
+```
+  claim_gtc_neurons : (principal, vec NeuronId) -> (Result);
+  claim_or_refresh_neuron_from_account : (ClaimOrRefreshNeuronFromAccount) -> (
+      ClaimOrRefreshNeuronFromAccountResponse,
+    );
+  get_build_metadata : () -> (text) query;
+  get_full_neuron : (nat64) -> (Result_2) query;
+  get_full_neuron_by_id_or_subaccount : (NeuronIdOrSubaccount) -> (
+      Result_2,
+    ) query;
+  get_monthly_node_provider_rewards : () -> (Result_3);
+  get_network_economics_parameters : () -> (NetworkEconomics) query;
+  get_neuron_ids : () -> (vec nat64) query;
+  get_neuron_info : (nat64) -> (Result_4) query;
+  get_neuron_info_by_id_or_subaccount : (NeuronIdOrSubaccount) -> (
+      Result_4,
+    ) query;
+  get_node_provider_by_caller : (null) -> (Result_5) query;
+  get_pending_proposals : () -> (vec ProposalInfo) query;
+  get_proposal_info : (nat64) -> (opt ProposalInfo) query;
+  list_known_neurons : () -> (ListKnownNeuronsResponse) query;
+  list_neurons : (ListNeurons) -> (ListNeuronsResponse) query;
+  list_node_providers : () -> (ListNodeProvidersResponse) query;
+  list_proposals : (ListProposalInfo) -> (ListProposalInfoResponse) query;
+  manage_neuron : (ManageNeuron) -> (ManageNeuronResponse);
+  transfer_gtc_neuron : (NeuronId, NeuronId) -> (Result);
+  update_node_provider : (UpdateNodeProvider) -> (Result);
+```
+
+Get a list of pending proposals with `get_pending_proposals`
+
+```
+$ dfx canister --network=ic call nns get_pending_proposals
+```
+
+Get detailed info of a specific proposal with its Proposal ID via `get_proposal_info`
+
+```
+$ dfx canister --network=ic call nns get_proposal_info 57849
+```
+
+Get detailed info of a neuron with `get_neuron_info`, which gives the same outcome as you'd expect from using *quill*.
+
+```
+$ dfx canister --network=ic call nns get_neuron_info 5006161079443216280
+```
+
+Use `dfx identity` to switch to the designated *identity* for NNS voting `id-nns`.
+
+`1` is support; `2` is against; `0` is not voted yet, based on this [reference file on NNS governance API](https://github.com/dfinity/ic/blob/master/rs/nns/governance/proto/ic_nns_governance/pb/v1/governance.proto)
+
+Cast my `against` vote on proposal `57818`, with `manage_neuron`. This command will be used most often going forward.
+
+```
+dfx canister --network=ic call nns manage_neuron "(record {id=opt record{id=5_006_161_079_443_216_280:nat64};command=opt variant{RegisterVote=record {vote=2:int32;proposal=opt record{id=57_818:nat64}}}})"
+```
+
+Run `get_neuron_info` again to check if the voting has been effective
+
+```
+$ dfx canister --network=ic call nns get_neuron_info 5006161079443216280
+```
+
+Verify that my neuron's vote has been recorded in the output message
+
+```
+(
+  variant {
+    Ok = record {
+      dissolve_delay_seconds = 252_460_800 : nat64;
+      recent_ballots = vec {
+        record {
+          vote = 1 : int32;
+          proposal_id = opt record { id = 57_849 : nat64 };
+        };
+        record {
+          vote = 1 : int32;
+          proposal_id = opt record { id = 57_846 : nat64 };
+        };
+        record {
+          vote = 1 : int32;
+          proposal_id = opt record { id = 57_843 : nat64 };
+        };
+        record {
+          vote = 1 : int32;
+          proposal_id = opt record { id = 57_839 : nat64 };
+        };
+        record {
+          vote = 1 : int32;
+          proposal_id = opt record { id = 57_832 : nat64 };
+        };
+        record {
+          vote = 1 : int32;
+          proposal_id = opt record { id = 57_831 : nat64 };
+        };
+        record {
+          vote = 1 : int32;
+          proposal_id = opt record { id = 57_821 : nat64 };
+        };
+        record {
+          vote = 2 : int32;
+          proposal_id = opt record { id = 57_818 : nat64 };
+        };
+        record {
+          vote = 2 : int32;
+          proposal_id = opt record { id = 57_819 : nat64 };
+        };
+        record {
+          vote = 1 : int32;
+          proposal_id = opt record { id = 57_820 : nat64 };
+        };
+      };
+      created_timestamp_seconds = 1_651_465_517 : nat64;
+      state = 1 : int32;
+      stake_e8s = 100_000_000 : nat64;
+      joined_community_fund_timestamp_seconds = null;
+      retrieved_at_timestamp_seconds = 1_651_557_629 : nat64;
+      known_neuron_data = null;
+      voting_power = 200_036_155 : nat64;
+      age_seconds = 91_279 : nat64;
+    }
+  },
+)
+```
+
+Success!
+
+### Step 4 - set follow topics and followees in NNS
+
+Step 3 can be repeated as needed, with a different *Proposal ID* each time.
+
+We also need to set up follow topic and followees, so that we can focus on the most consequential proposals rather than routine updates. For now I'm following Neuron 27 (DFINITY) and Neuron 28 (Internet Computer Association) for all exchange related proposals, which is `topic 2` according to the [reference file on NNS governance API](https://github.com/dfinity/ic/blob/master/rs/nns/governance/proto/ic_nns_governance/pb/v1/governance.proto). The NNS way is to pick a topic first, then neuron IDs. 
+
+```
+  Unspecified = 0,
+  ManageNeuron = 1,
+  ExchangeRate = 2,
+  NetworkEconomics = 3,
+  Governance = 4,
+  NodeAdmin = 5,
+  ParticipantManagement = 6,
+  SubnetManagement = 7,
+  NetworkCanisterManagement = 8,
+  Kyc = 9,
+  NodeProviderRewards = 10,
+```
+
+This step can be accomplished in *dfx* or *quill*. Using *quill* has easier syntax. 
+
+For every topic, if only one neuron will be followed
+
+```
+$ ./quill --pem-file ~/.config/dfx/identity/id-nns/identity.pem neuron-manage --follow-topic=2 --follow-neurons=27 5006161079443216280 |./quill send --yes -
+```
+
+If multiple neurons will be followed, the flag `--follow-neurons` must be placed in the back AFTER *neuron ID*.
+
+```
+$ ./quill --pem-file ~/.config/dfx/identity/id-nns/identity.pem neuron-manage 5006161079443216280 --follow-topic=2 --follow-neurons 27 28 | ./quill send --yes -
+```
+
+It returns
+
+```
+Sending message with
+
+  Call type:   update
+  Sender:      ytg23-rrskd-bnz5m-66dk2-rqt6w-ilvbq-56aha-ipaue-22e2c-uvjma-vae
+  Canister id: rrkah-fqaaa-aaaaa-aaaaq-cai
+  Method name: manage_neuron
+  Arguments:   (
+  record {
+    id = opt record { id = 5_006_161_079_443_216_280 : nat64 };
+    command = opt variant {
+      Follow = record {
+        topic = 2 : int32;
+        followees = vec {
+          record { id = 27 : nat64 };
+          record { id = 28 : nat64 };
+        };
+      }
+    };
+    neuron_id_or_subaccount = null;
+  },
+)
+Request ID: 0x96ac0b3c29855507dee2e615df8eaa6eb0065b64b59bb49d5b60db40b68e4113
+The request is being processed...
+The request is being processed...
+(record { command = opt variant { Follow = record {} } })
+```
+
+Verify that this following relationship has been established with `get_full_neuron` in `dfx`. The previous subcommand `get_neuron_info` would not provide this detail.
+
+```
+$ dfx canister --network=ic call nns get_full_neuron 5006161079443216280
+```
+
+The output message contains this, verifying that the follow action has been effective.
+
+```
+      followees = vec {
+        record {
+          2 : int32;
+          record {
+            followees = vec {
+              record { id = 27 : nat64 };
+              record { id = 28 : nat64 };
+            };
+          };
+        };
+        record {
+          0 : int32;
+          record { followees = vec { record { id = 28 : nat64 } } };
+        };
+      };
+```
+
+This completes the entire loop. No more auto logoout every ten minutes. No more waiting for webpage loading. It's entirely run on command line. You can control the entire workflow at your own pace with probably more info than you actually need.
 
 ## Next
+
+This command-line based workflow can be iterated in a few directions:
+
+1. Replace all *quill* commands with *dfx*, which is more canonical with more robust syntax support.
+2. Build a *Svelte* front-end just for NNS voting and community funding, and keep it separate from canister management and ICP transfer. Arguably both canister management and ICP transfer can probably benefit from having their own independent apps, and be developed by the IC community rather than DFINITY.
+3. Create a social network of NNS neurons. 
+4. Deploy 2 and 3 on the Internet Computer to move toward 100% on-chain governance.
+
 
 ## References
 
