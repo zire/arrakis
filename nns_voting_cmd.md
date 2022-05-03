@@ -3,6 +3,8 @@
 ## Table of Contents
 
 - [Background](#background)
+- [Why](#why)
+- [Disclaimer](#disclaimer)
 - [How](#how)
 - [Next](#next)
 - [References](#references)
@@ -19,8 +21,31 @@ Two command-line tools are needed. [*quill*](https://github.com/dfinity/quill) i
 
 I was very buoyed by [Mix Labs](https://twitter.com/MixLabs_) developer [Liquan](https://twitter.com/liquan_eth)'s [earlier experiment on this topic in July 2021](https://forum.dfinity.org/t/how-to-use-dfx-to-interact-with-nns-canisters-instead-of-nns-app/6013) and drew many inspirations from his scripts. My DFINITY colleagues [Paul](https://twitter.com/paulliuicp) provided constant guidance along the way and [David](https://twitter.com/daviddalbusco) provided the last piece to complete the puzzle.
 
+## Why
+
+For IC developers, this how-to guide could serve as a baseline reference that might spark a few ideas on how you can build your very own NNS front-end. DFINITY strives to develop the best infrastructure possible for IC developers to refactor the entire Internet. It would very much prefer to leave the application-level development to IC developers. There is no sacred cow. If your needs are not met or you are not satisfied with the current stack, build one yourself. That's the spirit of the Internet Computer. 
+
+For IC holders that are not developers, this article could serve as another validation point that speaks to the continuous decentralization happening on the Internet Computer. DFINITY's R&D team has iterated IC 4 times in the last 5 years before Genesis launch. Among the many paradigm-shifting innovations that will re-shape the Internet as we know it, one of them is this [350-line file](https://raw.githubusercontent.com/dfinity/ic/master/rs/nns/governance/canister/governance.did) that defines the entire working logic of NNS, the most advanced Decentralized Autonomous Organization ("DAO") in crypto. It's there for anyone curious enough to tinker with and build applications around.
+
+## Disclaimer
+
+>YOU EXPRESSLY ACKNOWLEDGE AND AGREE THAT USE OF THIS METHOD IS AT YOUR SOLE RISK. THE AUTHOR OF THIS ARTICLE SHALL NOT BE LIABLE FOR DAMAGES OF ANY TYPE, WHETHER DIRECT OR INDIRECT.
+
+If you're not comfortable with command-line tools, this guide is not for you. Actions executed by *quill* and *dfx* could trigger irreversible events for your staked neurons on NNS and impact your staking rewards. Please conduct your own research and experiment before trying to follow this guide.
+
+This how-to guide describes my personal workflow that suits my unique needs on NNS governance. Most ICP holders just follow named neurons and rarely need to worry about this level of technical details. This shall not be considered an "official" guide by DFINITY that encourages IC developers to follow its footsteps. It's more for my own personal reference rather than promoting a new way of doing things in the IC community at large.
 
 ## How
+
+At a high-level, this workflow involves 3 steps. First, use *quill* to create a new neuron for staking on the IC ledger. Second, use *dfx* to review pending NNS proposals and cast votes. Third, use *dfx* to assign following topics and followees. 
+
+### Step 1 - create neuron for staking and voting
+
+Install [quill](https://github.com/dfinity/quill) from 
+
+### Step 2 - review NNS proposals and cast votes
+
+### Step 3 - set follow topics and followees in NNS
 
 ## Next
 
