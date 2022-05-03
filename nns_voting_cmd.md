@@ -51,18 +51,18 @@ Move the downloaded file to a folder you prefer, say `/Applications` and rename 
 
 Give this *quill* executable file proper permission to enable write access for its owner. 
 
-```
+```shell
 $ chmod 755 quill
 ```
 
 *quill* is ready for use now. When in folder `/Applications`, launch the app
 
-```
+```shell
 $ ./quill --help
 ```
 and here's the main menu
 
-```
+```shell
 quill 0.2.15
 
 Ledger & Governance ToolKit for cold wallets
@@ -104,19 +104,19 @@ SUBCOMMANDS:
 
 Install *dfx* from [smartcontracts.org](https://smartcontracts.org/docs/developers-guide/install-upgrade-remove.html), which is owned by DFINITY. 
 
-```
+```shell
 $ sh -ci "$(curl -fsSL https://smartcontracts.org/install.sh)"
 ```
 
 Check if the dfx package is properly installed
 
-```
+```shell
 $ dfx help
 ```
 
 and here's the main menu
 
-```
+```shell
 dfx 0.9.2
 The DFINITY Executor
 
@@ -171,19 +171,19 @@ You can create multiple *identity* with *dfx* on your local machine. I have an *
 
 List all the current identities
 
-```
+```shell
 $ dfx identity list
 ```
 
 Set the one that shall be used for NNS governance, say `id-nns`
 
-```
+```shell
 $ dfx identity use id-nns
 ```
 
 Verify that `id-nns` is the current identity assumed by *dfx*
 
-```
+```shell
 $ dfx identity whoami
 ```
 
@@ -191,25 +191,25 @@ The *PEM* file is stored here `~/.config/dfx/identity/id-nns/identity.pem`
 
 Grab the public IDs (both Account ID and Principal ID) for this identity (this cannot be obtained from the web interface *Official NNS Front-End App*) with subcommand `public-ids`.
 
-```
+```shell
 $ ./quill --pem-file ~/.config/dfx/identity/id-nns/identity.pem public-ids
 ```
 
 *quill* shall display this for *identity* `id-nns`.
 
-```
+```shell
 Principal id: ytg23-rrskd-bnz5m-66dk2-rqt6w-ilvbq-56aha-ipaue-22e2c-uvjma-vae
 Account id: 99f6ab276a23f3308641a06c9b24f3020849ee23774c6196c49e6bebf39e1734
 ```
 
 Check out the ICP balance for this account with subcommand `account-balance`
 
-```
+```shell
 $ ./quill account-balance 99f6ab276a23f3308641a06c9b24f3020849ee23774c6196c49e6bebf39e1734
 ```
 and it returns
 
-```
+```shell
 Sending message with
 
   Call type:   query
@@ -233,12 +233,12 @@ Commands in *quill* cannot be executed without running `quill send` first. We wi
 
 Let's release the kraken with subcommand `neuron-stake`, followed by `send --yes -`.
 
-```
+```shell
 $ ./quill --pem-file ~/.config/dfx/identity/id-nns/identity.pem neuron-stake --amount 1 --name "neuron01" | ./quill send --yes -
 ```
 and it returns
 
-```
+```shell
 - The request is being processed...
 - The request is being processed...
 - (
@@ -253,13 +253,13 @@ A new neuron with ID `5_006_161_079_443_216_280` or [5006161079443216280](https:
 
 Take a closer look at this neuron with `get-neuron-info` subcommand
 
-```
+```shell
 $ ./quill get-neuron-info 5006161079443216280
 ```
 
 and it returns
 
-```
+```shell
 Sending message with
 
   Call type:   query
@@ -328,7 +328,7 @@ From `stake_e8s = 100_000_000 : nat64;`, it can be verified that this neuron has
 
 Now let's set the dissolve delay so that this neuron can be eligible for voting with `neuron-manage` subcommand.
 
-```
+```shell
 $ ./quill --pem-file ~/.config/dfx/identity/id-nns/identity.pem neuron-manage -a $((366*8*24*3600)) 5_006_161_079_443_216_280 | ./quill send --yes -
 ```
 
@@ -336,7 +336,7 @@ Staking on IC is capped at 8 years. Dissolve Delay is expressed in seconds in *q
 
 From the same output message from `get-neuron-info`, it can be verified that the dissolve delay has been set correctly at `252,460,800` seconds, aka, 8 years.
 
-```
+```shell
 dissolve_delay_seconds = 252_460_800 : nat64;
 ```
 
@@ -348,13 +348,13 @@ Running *dfx* requires several files such as `dfx.json` and `canister_ids.json` 
 
 Unzip the file, move it into an empty folder (say, `nns-make`), move the folder to `/Applications` folder. Enter into the folder and run `make` in it.
 
-```
+```shell
 cd nns-make
 make
 ```
 A few files will be created and downloaded. The folder `nns-make` now looks like
 
-```
+```shell
 .dfx
 Makefile
 canister_ids.json
@@ -364,13 +364,13 @@ governance.did
 
 Test run to see if you can successfully query IC ledger
 
-```
+```shell
 $ dfx canister --network=ic call nns list_known_neurons
 ```
 
 It shall return
 
-```
+```shell
 (
   record {
     known_neurons = vec {
@@ -402,7 +402,7 @@ It shall return
 
 In this folder, check out the file [governance.did](https://github.com/dfinity/ic/raw/master/rs/nns/governance/canister/governance.did) that defines the entire API interface for NNS. The last section is probably the most important one, especially with `manage_neuron` command.
 
-```
+```shell
   claim_gtc_neurons : (principal, vec NeuronId) -> (Result);
   claim_or_refresh_neuron_from_account : (ClaimOrRefreshNeuronFromAccount) -> (
       ClaimOrRefreshNeuronFromAccountResponse,
@@ -433,19 +433,19 @@ In this folder, check out the file [governance.did](https://github.com/dfinity/i
 
 Get a list of pending proposals with `get_pending_proposals`
 
-```
+```shell
 $ dfx canister --network=ic call nns get_pending_proposals
 ```
 
 Get detailed info of a specific proposal with its Proposal ID via `get_proposal_info`
 
-```
+```shell
 $ dfx canister --network=ic call nns get_proposal_info 57849
 ```
 
 Get detailed info of a neuron with `get_neuron_info`, which gives the same outcome as you'd expect from using *quill*.
 
-```
+```shell
 $ dfx canister --network=ic call nns get_neuron_info 5006161079443216280
 ```
 
@@ -455,19 +455,19 @@ Use `dfx identity` to switch to the designated *identity* for NNS voting `id-nns
 
 Cast my `against` vote on proposal `57818`, with `manage_neuron`. This command will be used most often going forward.
 
-```
+```shell
 dfx canister --network=ic call nns manage_neuron "(record {id=opt record{id=5_006_161_079_443_216_280:nat64};command=opt variant{RegisterVote=record {vote=2:int32;proposal=opt record{id=57_818:nat64}}}})"
 ```
 
 Run `get_neuron_info` again to check if the voting has been effective
 
-```
+```shell
 $ dfx canister --network=ic call nns get_neuron_info 5006161079443216280
 ```
 
 Verify that my neuron's vote has been recorded in the output message
 
-```
+```shell
 (
   variant {
     Ok = record {
@@ -535,7 +535,7 @@ Step 3 can be repeated as frequently as needed, with a different *Proposal ID* e
 
 We also need to set up follow topic and followees, so that we can focus on the most consequential proposals rather than routine updates. For now I'm following Neuron 27 (DFINITY) and Neuron 28 (Internet Computer Association) for all exchange related proposals, which is `topic 2` according to the [reference file on NNS governance API](https://github.com/dfinity/ic/blob/master/rs/nns/governance/proto/ic_nns_governance/pb/v1/governance.proto). The NNS way is to pick a topic first, then neuron IDs. 
 
-```
+```shell
   Unspecified = 0,
   ManageNeuron = 1,
   ExchangeRate = 2,
@@ -553,19 +553,19 @@ This step can be accomplished in *dfx* or *quill*. *quill* has easier syntax (th
 
 For every topic, if only one neuron will be followed
 
-```
+```shell
 $ ./quill --pem-file ~/.config/dfx/identity/id-nns/identity.pem neuron-manage --follow-topic=2 --follow-neurons=27 5006161079443216280 |./quill send --yes -
 ```
 
 If multiple neurons will be followed, the flag `--follow-neurons` must be placed in the back AFTER *neuron ID*.
 
-```
+```shell
 $ ./quill --pem-file ~/.config/dfx/identity/id-nns/identity.pem neuron-manage 5006161079443216280 --follow-topic=2 --follow-neurons 27 28 | ./quill send --yes -
 ```
 
 It returns
 
-```
+```shell
 Sending message with
 
   Call type:   update
@@ -595,13 +595,13 @@ The request is being processed...
 
 Verify that this following relationship has been established with `get_full_neuron` in `dfx`. The previous subcommand `get_neuron_info` would not provide this detail.
 
-```
+```shell
 $ dfx canister --network=ic call nns get_full_neuron 5006161079443216280
 ```
 
 The output message contains this, verifying that the follow action has been effective.
 
-```
+```shell
       followees = vec {
         record {
           2 : int32;
